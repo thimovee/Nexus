@@ -1,118 +1,137 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider     = "postgresql"
-    url          = env("DATABASE_URL")
-    directUrl    = env("DIRECT_URL")
-    relationMode = "prisma"
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
+  relationMode = "prisma"
 }
 
 model Order {
-    id          String       @id @default(cuid())
-    products    Product[]
-    total       Float?
-    address     String?
-    phone       String?
-    email       String?
-    name        String?
-    description String?
-    status      OrderStatus? @default(PENDING)
-    createdAt   DateTime     @default(now())
-    updatedAt   DateTime     @updatedAt
+  id          String       @id @default(cuid())
+  total       Float?
+  address     String?
+  phone       String?
+  email       String?
+  name        String?
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  status      OrderStatus? @default(PENDING)
+  products    Product[]
 }
 
 model Product {
-    id              Int      @id @default(autoincrement())
-    name            String
-    price           Float
-    inventory       Int
-    description     String
-    color           Color?   @relation(fields: [colorId], references: [id])
-    colorId         Int?
-    tags            Tag[]
-    images          Json[]
-    brand           Brand?   @relation(fields: [brandId], references: [id])
-    brandId         Int?
-    discount        Float?
-    reviews         Review[]
-    isActive        Boolean? @default(true)
-    slug            String   @unique
-    nameMeta        String?
-    descriptionMeta String?
-    category        Category @relation(fields: [categoryId], references: [id])
-    categoryId      Int
-    createdAt       DateTime @default(now())
-    updatedAt       DateTime @updatedAt
-    orders          Order[]
+  id              Int      @id @default(autoincrement())
+  name            String
+  price           Float
+  inventory       Int
+  description     String
+  colorId         Int?
+  images          Json[]
+  brandId         Int?
+  discount        Float?
+  isActive        Boolean? @default(true)
+  slug            String   @unique
+  nameMeta        String?
+  descriptionMeta String?
+  categoryId      Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  color           Color?   @relation(fields: [colorId], references: [id])
+  tags            Tag[]
+  brand           Brand?   @relation(fields: [brandId], references: [id])
+  reviews         Review[]
+  category        Category @relation(fields: [categoryId], references: [id])
+  orders          Order[]
 
-    @@index([categoryId])
-    @@index([brandId])
-    @@index([colorId])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([colorId])
 }
 
 model Review {
-    id        Int      @id @default(autoincrement())
-    rating    Int
-    comment   String
-    userId    String
-    productId Int
-    product   Product  @relation(fields: [productId], references: [id])
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String
+  userId    String
+  productId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
 
-    @@index([productId])
+  @@index([productId])
 }
 
 model Category {
-    id        Int            @id @default(autoincrement())
-    name      String
-    thumbnail Json[]
-    slug      String         @unique
-    status    FeaturedStatus @default(NOT_FEATURED)
-    products  Product[]
-    createdAt DateTime       @default(now())
-    updatedAt DateTime       @updatedAt
+  name      String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  slug      String         @unique
+  status    FeaturedStatus @default(NOT_FEATURED)
+  thumbnail Json[]
+  id        Int            @id @default(autoincrement())
+  isDeleted Boolean?       @default(false)
+  products  Product[]
 }
 
 model Brand {
-    id        Int       @id @default(autoincrement())
-    name      String
-    products  Product[]
-    icon      String
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String
+  icon      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 model Color {
-    id        Int       @id @default(autoincrement())
-    name      String
-    hex       String
-    products  Product[]
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String
+  hex       String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
 }
 
 model Tag {
-    id        Int       @id @default(autoincrement())
-    name      String    @unique
-    products  Product[]
-    createdAt DateTime  @default(now())
-    updatedAt DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[]
+}
+
+model OrderToProduct {
+  A String
+  B Int
+
+  @@unique([A, B], map: "_OrderToProduct_AB_unique")
+  @@index([B], map: "_OrderToProduct_B_index")
+  @@map("_OrderToProduct")
+}
+
+model ProductToTag {
+  A Int
+  B Int
+
+  @@unique([A, B], map: "_ProductToTag_AB_unique")
+  @@index([B], map: "_ProductToTag_B_index")
+  @@map("_ProductToTag")
 }
 
 enum FeaturedStatus {
-    NOT_FEATURED
-    ACTIVE
-    SCHEDULED
+  NOT_FEATURED
+  ACTIVE
+  ARCHIVED
 }
 
 enum OrderStatus {
-    PENDING
-    PROCESSING
-    COMPLETED
-    CANCELLED
-    REFUNDED
-    FAILED
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  FAILED
 }

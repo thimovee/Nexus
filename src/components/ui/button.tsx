@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react'
 import * as React from 'react'
 
 const buttonVariants = cva(
-    'active:scale-95 inline-flex items-center  ring-slate-500 justify-center rounded-md text-sm font-medium transition-colors focus:outline-none  disabled:opacity-40 dark:focus:ring-slate-400 disabled:pointer-events-none dark:focus:ring-offset-slate-900',
+    'active:scale-95 inline-flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 justify-center rounded-md text-sm font-medium transition-colors  disabled:opacity-40  disabled:pointer-events-none ',
     {
         variants: {
             variant: {
@@ -15,18 +15,20 @@ const buttonVariants = cva(
                 outline:
                     'bg-transparent text-foreground outline outline-1 outline-border hover:bg-border',
                 subtle:
-                    'hover:bg-zinc-200 bg-zinc-100 text-zinc-900',
+                    'hover:bg-zinc-200 bg-gray-200/75 text-zinc-900',
                 ghost:
-                    'bg-transparent hover:bg-border text-primary data-[state=open]:bg-transparent data-[state=open]:bg-transparent',
+                    'bg-transparent hover:bg-primary/5 text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 data-[state=open]:bg-transparent data-[state=open]:bg-transparent',
                 link: 'bg-transparent dark:bg-transparent underline-offset-4 hover:underline text-slate-900 dark:text-slate-100 hover:bg-transparent dark:hover:bg-transparent',
-                cta: 'bg-cta hover:bg-cta/90 text-background font-medium'
+                cta: 'bg-cta hover:bg-cta/90 text-background font-medium',
+                secondary_cta: 'bg-cta/20 hover:bg-cta/30 text-cta font-medium',
             },
             size: {
                 default: 'h-9 py-2 px-4',
                 sm: 'h-9 px-[10px] rounded-md',
+                md: 'h-10 py-2 px-3 rounded-md',
                 xs: 'h-8 px-1.5 rounded-sm',
                 lg: 'h-11 px-8 rounded-md',
-                icon: "h-9 w-9",
+                icon: "h-9 w-9 rounded-full",
             },
         },
         defaultVariants: {
