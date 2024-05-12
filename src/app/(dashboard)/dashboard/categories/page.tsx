@@ -1,9 +1,7 @@
-import { Input } from '@/components/ui/input'
-import { ChevronRight, Search } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 import { DataTable } from './data-table'
-import { db } from '@/lib/db'
 import { columns } from './columns'
 import { getCategoriesWithProductCount } from '@/app/_actions/category'
 

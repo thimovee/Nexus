@@ -18,12 +18,13 @@ export type ExtentedCategory = Category & {
     productCount: number;
 }
 
-export type ExtentedProduct = Product & {
+export type ExtendedProduct = Product & {
     category: string;
     rating: number;
-    tags: string[];
     brand: string;
-    brandIcon: string;
     color: string;
     colorHex: string;
+    orders: number;
 }
+
+

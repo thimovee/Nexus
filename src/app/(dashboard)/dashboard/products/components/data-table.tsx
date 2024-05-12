@@ -3,18 +3,16 @@ import { ColumnDef, ColumnFiltersState, getFilteredRowModel, VisibilityState, fl
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button, buttonVariants } from "@/components/ui/button"
 import React, { Suspense } from "react"
-import { Archive, Filter, LucideAlertTriangle, Merge, Plus, Search, SlidersHorizontal, Star, StarOff, Trash, Trash2, TriangleAlert, Undo, Undo2, X } from "lucide-react"
+import { Archive, Eye, Filter, LucideAlertTriangle, Merge, Plus, Search, SlidersHorizontal, Star, StarOff, Trash, Trash2, TriangleAlert, Undo, Undo2, X } from "lucide-react"
 import { Category, FeaturedStatus } from "@prisma/client";
-// import { deleteCategories } from "@/app/_actions/category";
 import { toast } from "sonner";
 import Image from "next/image";
-// import { CreateCategory } from "@/components/forms/CreateCategory"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { DataTablePagination } from "@/components/ui/PaginationControls"
 import { catchError, cn } from "@/lib/utils"
 import { Badge, badgeVariants } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ExtentedCategory, ImageFile } from "@/types"
+import { ExtendedProduct, ImageFile } from "@/types"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { changeCategoriesStatus, deleteCategories, undoDeleteCategories } from "@/app/_actions/category"
@@ -27,7 +25,7 @@ interface DataTableProps<TData, TValue> {
     data: TData[]
 }
 
-export function DataTable<TData extends ExtentedCategory, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
+export function DataTable<TData extends ExtendedProduct, TValue>({ columns, data }: DataTableProps<TData, TValue>) {
     const toast = useToaster()
     const [isDialogOpen, setIsDialogOpen] = React.useState(false)
     const [showWarning, setShowWarning] = React.useState(false)
@@ -55,134 +53,44 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
         },
     })
 
-    async function featureSelectedRows() {
-        try {
-            setIsLoading(true)
-            const selectedRows = table.getFilteredSelectedRowModel().rows;
-            const rowsToFeature = selectedRows.filter(row => row.original.status !== "ACTIVE");
-            const ids = rowsToFeature.map(row => row.original.id);
-            await changeCategoriesStatus(ids, "ACTIVE")
-            setIsLoading(false)
-            setRowSelection({})
-        } catch (err) {
-            catchError(err)
-        }
-    }
-
-    async function archiveSelectedRows() {
-        try {
-            setIsLoading(true)
-            const selectedRows = table.getFilteredSelectedRowModel().rows;
-            const rowsToArchive = selectedRows.filter(row => row.original.status !== "ARCHIVED");
-            const ids = rowsToArchive.map(row => row.original.id);
-            await changeCategoriesStatus(ids, "ARCHIVED")
-            setIsLoading(false)
-            setRowSelection({})
-        } catch (err) {
-            catchError(err)
-        }
-    }
-
-    async function unfeatureSelectedRows() {
-        try {
-            setIsLoading(true)
-            const selectedRows = table.getFilteredSelectedRowModel().rows;
-            const rowsToUnfeature = selectedRows.filter(row => row.original.status !== "NOT_FEATURED");
-            const ids = rowsToUnfeature.map(row => row.original.id);
-            await changeCategoriesStatus(ids, "NOT_FEATURED")
-            setIsLoading(false)
-            setRowSelection({})
-        } catch (err) {
-            catchError(err)
-        }
-    }
-
-    // async function mergeCategories() {
-    //     try {
-    //         setIsLoading(true)
-    //         const selectedRows = table.getFilteredSelectedRowModel().rows;
-    //         const ids = selectedRows.map(row => row.original.id);
-    //         await mergeCategories(ids)
-    //         setIsLoading(false)
-    //         setRowSelection({})
-    //     } catch (err) {
-    //         catchError(err)
-    //     }
-    // }
-
-    function deleteCategory() {
-        const categories = table.getFilteredSelectedRowModel().rows;
-        const hasLinkedProducts = categories.some(category => category.original.productCount > 0);
-        const isFeatured = categories.some(category => category.original.status === "ACTIVE");
-
-
-        if (isFeatured) {
-            toast({
-                title: "Cannot delete a featured category",
-                variant: "warning",
-                icon: <TriangleAlert className="h-4 w-4" />,
-                duration: 5000,
-                size: "icon"
-            })
-            return
-        } else if (hasLinkedProducts) {
-            toast({
-                title: "Cannot delete a category with linked products",
-                variant: "warning",
-                icon: <TriangleAlert className="text-warning h-4 w-4" />,
-                duration: 5000,
-                size: "icon"
-            })
-        } else {
-            setIsDialogOpen(true)
-        }
-
-
-    }
-
-    function checkForProducts() {
-        const selectedRows = table.getFilteredSelectedRowModel().rows;
-        const products = selectedRows.filter(row => row.original.productCount > 0);
-        if (products.length > 0) {
-            setShowWarning(true)
-        } else {
-            setShowWarning(false)
-        }
-    }
-
-    function undoDeletion(rowIds: number[]) {
-        undoDeleteCategories(rowIds);
-        toast({
-            title: "Category deletion undone",
-            variant: "success",
-            duration: 3000,
-            icon: <Undo className="h-4 w-4" />,
-        });
-    }
-
     return (
         <div className="pb-10">
             <div className="flex mb-6 w-full ">
-                <div className={cn("hover:text-primary hover:cursor-pointer transition duration-150 flex gap-2 items-center font-semibold text-sm capitalize px-5 py-2 border-b-2 text-primary/50 border-border", !table.getColumn("status")?.getFilterValue() && "text-cta border-cta hover:text-cta")} onClick={() => table.getColumn("status")?.setFilterValue("")}>
+                <div className={cn("hover:text-primary hover:cursor-pointer transition duration-150 flex gap-2 items-center font-semibold text-sm capitalize px-5 py-2 border-b-2 text-primary/50 border-border", !table.getColumn("discount")?.getFilterValue() && !table.getColumn("inventory")?.getFilterValue() && "text-cta border-cta hover:text-cta")} onClick={() => {
+                    table.getColumn("discount")?.setFilterValue("");
+                    table.getColumn("inventory")?.setFilterValue("");
+                }}>
                     <span>All</span>
                     <div className="bg-border h-[18px] text-xs w-[18px] p-1 rounded-md flex items-center justify-center">
                         {data.length}
                     </div>
                 </div>
-                {Object.values(FeaturedStatus).sort().map(status => (
-                    <div key={status} className={cn("hover:text-primary hover:cursor-pointer transition duration-150 flex gap-2 items-center font-semibold text-sm capitalize px-5 py-2 border-b-2 text-primary/50 border-border", table.getColumn("status")?.getFilterValue() === status.toString() && "text-cta border-cta hover:text-cta")} onClick={() => table.getColumn("status")?.setFilterValue(status.toString())}>
-                        {status === FeaturedStatus.ACTIVE ? 'Featured' : status === FeaturedStatus.ARCHIVED ? 'Archived' : 'Not Featured'}
-                        <div className="bg-border h-[18px] text-xs w-[18px] p-1 rounded-md flex items-center justify-center">
-                            {data.filter((category: Category) => category.status === status).length}
-                        </div>
+
+                <div className={cn("hover:text-primary hover:cursor-pointer transition duration-150 flex gap-2 items-center font-semibold text-sm capitalize px-5 py-2 border-b-2 text-primary/50 border-border", table.getColumn("discount")?.getFilterValue() === "discounted" && "text-cta border-cta hover:text-cta")} onClick={() => {
+                    table.getColumn("discount")?.setFilterValue("discounted");
+                    table.getColumn("inventory")?.setFilterValue("");
+                }}>
+                    <span>Discounted</span>
+                    <div className="bg-border h-[18px] text-xs w-[18px] p-1 rounded-md flex items-center justify-center">
+                        {data.filter((product: ExtendedProduct) => product.discount && product.discount > 0).length}
                     </div>
-                ))}
+                </div>
+                <div className={cn("hover:text-primary hover:cursor-pointer transition duration-150 flex gap-2 items-center font-semibold text-sm capitalize px-5 py-2 border-b-2 text-primary/50 border-border", table.getColumn("inventory")?.getFilterValue() === "out-of-stock" && "text-cta border-cta hover:text-cta")} onClick={() => {
+                    table.getColumn("inventory")?.setFilterValue("out-of-stock");
+                    table.getColumn("discount")?.setFilterValue("");
+                }}>
+                    <span>Out of Stock</span>
+                    <div className="bg-border h-[18px] text-xs w-[18px] p-1 rounded-md flex items-center justify-center">
+                        {data.filter((product: ExtendedProduct) => product.inventory === 0).length}
+                    </div>
+                </div>
+
                 <div className="flex-1 border-b-2 border-border flex justify-end">
                     <div className="flex gap-2 items-center mb-4">
-                        <ExportDataButton data={data} name="categories" />
-                        <Link href="/dashboard/categories/new" className={cn(buttonVariants({ variant: "cta" }), "flex gap-2 items-center")}>
+                        <ExportDataButton data={data} name="products" />
+                        <Link href="/dashboard/products/new" className={cn(buttonVariants({ variant: "cta" }), "flex gap-2 items-center")}>
                             <Plus className="w-4 h-4" />
-                            Add Category
+                            Add Product
                         </Link>
                     </div>
                 </div>
@@ -196,24 +104,16 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                         </div>
                     </div>
                     <div className="flex gap-3 items-center">
-                        <Badge variant="outline" onClick={featureSelectedRows} className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 0 && (table.getFilteredSelectedRowModel().rows.length > 1 || table.getFilteredSelectedRowModel().rows.some((row) => row.original.status !== "ACTIVE")) && "opacity-100 cursor-pointer pointer-events-auto")} >
-                            <Star className="fill-orange-500 text-orange-500 w-4 h-4" />
-                            <span>Feature</span>
+                        <Badge variant="outline" className={cn("opacity-50 pointer-events-none gap-2")} >
+                            <Plus className=" w-4 h-4" />
+                            <span>Assign</span>
                         </Badge>
-                        <Badge variant="outline" onClick={unfeatureSelectedRows} className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 0 && (table.getFilteredSelectedRowModel().rows.length > 1 || table.getFilteredSelectedRowModel().rows.some((row) => row.original.status !== "NOT_FEATURED")) && "opacity-100 cursor-pointer pointer-events-auto")} >
-                            <StarOff className="fill-red-500 text-red-500 w-4 h-4" />
-                            <span>Unfeature</span>
-                        </Badge>
-                        <Badge variant="outline" onClick={archiveSelectedRows} className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 0 && "opacity-100 cursor-pointer pointer-events-auto", badgeVariants({ variant: "outline" }))}>
-                            <Archive className="w-4 h-4" />
-                            <span>Archive</span>
-                        </Badge>
-                        <Badge variant="outline" className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 1 && "opacity-100 cursor-pointerpointer-events-auto")}>
-                            <Merge className="w-4 h-4" />
-                            <span>Merge</span>
+                        <Badge variant="outline" className={cn("opacity-50 pointer-events-none gap-2")} >
+                            <Eye className=" w-4 h-4" />
+                            <span>Visibility</span>
                         </Badge>
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <Badge onClick={() => deleteCategory()} className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 0 && "opacity-100 cursor-pointer pointer-events-auto")} variant="outline">
+                            <Badge className={cn("opacity-50 pointer-events-none gap-2", table.getFilteredSelectedRowModel().rows.length > 0 && "opacity-100 cursor-pointer pointer-events-auto")} variant="outline">
                                 <Trash2 className="text-red-500 w-4 h-4" />
                                 <span className="-mb-px">Delete</span>
                             </Badge>
@@ -226,16 +126,16 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                                             <div className="bg-gray-50 border border-border p-3 rounded-md flex flex-col gap-3">
                                                 {table.getFilteredSelectedRowModel().rows.map((row) => (
                                                     <div key={row.original.id} className="border-b pb-3 border-border last:border-none relative h-16 w-full flex gap-6 items-center">
-                                                        {row.original.thumbnail && row.original.thumbnail[0] && (
+                                                        {/* {row.original.thumbnail && row.original.thumbnail[0] && (
                                                             <div className="relative h-full w-1/4">
-                                                                {/* @ts-ignore */}
+                                                                @ts-ignore
                                                                 <Image src={row.original.thumbnail[0].url} alt={row.original.name} fill className="shadow h-full w-full object-cover rounded-md" />
                                                             </div>
                                                         )}
                                                         <p className="mt-auto font-semibold text-lg">{row.original.name}</p>
                                                         <Badge className="ml-auto mb-auto !text-xs !rounded-md" variant={row.original.status === 'ACTIVE' ? 'success' : row.original.status === 'NOT_FEATURED' ? 'destructive' : 'archived'}>
                                                             {row.original.status === 'ACTIVE' ? 'Featured' : row.original.status === 'NOT_FEATURED' ? 'Not Featured' : 'Archived'}
-                                                        </Badge>
+                                                        </Badge> */}
                                                     </div>
                                                 ))}
                                             </div>
@@ -263,7 +163,7 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                                                         description: "Category has been deleted successfully",
                                                         action: (
                                                             <div
-                                                                onClick={() => undoDeletion(rowIds)}
+                                                                // onClick={() => undoDeletion(rowIds)}
                                                                 className="translate-x-4 border border-red-500 text-sm text-background font-semibold bg-red-500 rounded-md px-2 py-1">
                                                                 Undo
                                                             </div>
@@ -297,11 +197,8 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                     {table.getFilteredSelectedRowModel().rows.length < 1 && (
                         <Suspense fallback={<Button variant="ghost" size="sm" className="border border-border flex gap-2 items-center">
                             <Plus className="w-4 h-4" />
-                            New Category
+                            New Product
                         </Button>}>
-                            <div className="flex items-center">
-                                {/* <CreateCategory /> */}
-                            </div>
                         </Suspense>
                     )}
                 </div>
@@ -358,6 +255,11 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                         table.getRowModel().rows.map((row) => (
                             <TableRow
                                 key={row.id}
+                                className={cn(
+                                    table.getColumn("discount")?.getFilterValue() === "discounted" && !row.original.discount && "hidden",
+                                    table.getColumn("inventory")?.getFilterValue() === "out-of-stock" && row.original.inventory > 0 && "hidden",
+                                )}
+
                                 data-state={row.getIsSelected() && "selected"}
                             >
                                 {row.getVisibleCells().map((cell) => (
@@ -377,6 +279,6 @@ export function DataTable<TData extends ExtentedCategory, TValue>({ columns, dat
                 </TableBody>
             </Table>
             <DataTablePagination table={table} />
-        </div>
+        </div >
     )
 }

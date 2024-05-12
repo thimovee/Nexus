@@ -15,7 +15,7 @@ export const ourFileRouter = {
             console.log("Upload complete for userId:", metadata.userId);
             console.log("file url", file.url);
         }),
-    productImage: f({ image: { maxFileSize: "8MB", maxFileCount: 5 } })
+    productImages: f({ image: { maxFileSize: "8MB", maxFileCount: 5 } })
         .middleware(async (req) => {
             const user = await getUser();
             if (!user) throw new Error("Unauthorized");

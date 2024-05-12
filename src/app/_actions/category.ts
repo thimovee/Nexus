@@ -5,6 +5,15 @@ import { ImageFile } from "@/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import slugify from 'slugify';
+import { FeaturedStatus } from "@prisma/client";
+
+export async function getCategories() {
+    return await db.category.findMany({
+        where: {
+            isDeleted: false,
+        },
+    });
+}
 
 export async function getCategoriesWithProductCount() {
     const categories = await db.category.findMany({
@@ -64,31 +73,37 @@ export async function addCategory(input: z.infer<typeof categorySchema>) {
     revalidatePath("/dashboard/categories");
 }
 
-export async function deleteCategories(id: number) {
-    const isFeatured = await db.category.findFirst({
+export async function deleteCategories(ids: number[]) {
+    const isFeatured = await db.category.findMany({
         where: {
-            id,
+            id: {
+                in: ids,
+            },
             status: "ACTIVE",
         },
     });
-    const hasLinkedProducts = await db.product.findFirst({
+    const hasLinkedProducts = await db.product.findMany({
         where: {
-            categoryId: id,
+            categoryId: {
+                in: ids,
+            }
         },
     });
 
-    if (hasLinkedProducts) {
+    if (hasLinkedProducts.length > 0) {
         throw new Error("Category has linked products");
     }
 
-    if (isFeatured) {
+    if (isFeatured.length > 0) {
         throw new Error("Cannot delete featured category");
     }
 
     else {
-        await db.category.update({
+        await db.category.updateMany({
             where: {
-                id,
+                id: {
+                    in: ids
+                }
             },
             data: {
                 isDeleted: true
@@ -98,15 +113,18 @@ export async function deleteCategories(id: number) {
     }
 }
 
-export async function undoDeleteCategories(id: number) {
-    await db.category.update({
+export async function undoDeleteCategories(ids: number[]) {
+    await db.category.updateMany({
         where: {
-            id,
+            id: {
+                in: ids
+            }
         },
         data: {
             isDeleted: false
-        },
+        }
     });
+
     revalidatePath("/dashboard/categories");
 }
 
@@ -150,3 +168,20 @@ export async function updateCategory(input: z.infer<typeof categorySchema> & {
     })
     revalidatePath("/dashboard/categories");
 }
+
+export async function changeCategoriesStatus(ids: number[], status: FeaturedStatus) {
+    await db.category.updateMany({
+        where: {
+            id: {
+                in: ids
+            }
+        },
+        data: {
+            status: status
+        }
+    });
+    revalidatePath("/dashboard/categories");
+}
+
+
+// merge categories

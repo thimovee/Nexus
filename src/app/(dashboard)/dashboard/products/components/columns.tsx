@@ -14,7 +14,7 @@ import { ChevronDown, ChevronUp, ChevronsUpDown, Edit, EditIcon, Eye, PencilIcon
 import { Button, buttonVariants } from "@/components/ui/button"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { ExtentedCategory, ImageFile } from "@/types"
+import { ExtendedProduct, ImageFile } from "@/types"
 import { deleteCategories, undoDeleteCategories } from "@/app/_actions/category"
 import { useToaster } from "@/hooks/useToaster"
 import React from "react"
@@ -22,7 +22,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 
 
-export const columns: ColumnDef<ExtentedCategory>[] = [
+export const columns: ColumnDef<ExtendedProduct>[] = [
     {
         id: "select",
         header: ({ table }) => (
@@ -58,11 +58,11 @@ export const columns: ColumnDef<ExtentedCategory>[] = [
             )
         },
         cell: ({ cell }) => {
-            const images = cell.row.original.thumbnail as ImageFile[]
+            const images = cell.row.original.images as ImageFile[]
             return (
                 <>{cell.row.original.name && (
                     <div className="pl-2 flex items-center gap-4">
-                        {images.map((image, i) => (
+                        {images.slice(0, 1).map((image, i) => (
                             <Image key={i} loading="lazy" width={1500} height={1500} className="h-10 w-10 shrink-0 rounded-full object-cover object-center" src={image.url} alt={image.name} />
                         ))}
                         <span className="font-semibold">{cell.row.original.name}</span>
@@ -71,27 +71,7 @@ export const columns: ColumnDef<ExtentedCategory>[] = [
         },
     },
     {
-        accessorKey: "productCount",
-        sortingFn: "alphanumeric",
-        header: ({ column }) => {
-            return (
-                <Button variant="ghost" size={"sm"}
-                    className="font-semibold text-primary/75 flex gap-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    Products
-                    {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
-                </Button>
-            )
-        },
-        cell: ({ cell }) => {
-            return (
-                <span className="pl-6">{cell.row.original.productCount}x</span>
-            )
-        },
-    },
-    {
-        accessorKey: "status",
+        accessorKey: "category",
         sortingFn: "basic",
         header: ({ column }) => {
             return (
@@ -99,21 +79,121 @@ export const columns: ColumnDef<ExtentedCategory>[] = [
                     className="font-semibold text-primary/75 flex gap-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Status
+                    Category
                     {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
                 </Button>
             )
         },
         cell: (cell) => (
-            <div>
-                <Badge className="!text-xs !rounded-md" variant={cell.row.original.status === 'ACTIVE' ? 'success' : cell.row.original.status === 'NOT_FEATURED' ? 'destructive' : 'archived'}>
-                    {cell.row.original.status === 'ACTIVE' ? 'Featured' : cell.row.original.status === 'NOT_FEATURED' ? 'Not Featured' : 'Archived'}
-                </Badge>
-            </div>
+            <Badge className="!bg-cta/15" variant="outline" >
+                {cell.row.original.category}
+            </Badge>
         )
     },
     {
+        accessorKey: "rating",
+        sortingFn: "basic",
+        header: ({ column }) => {
+            return (
+                <Button variant="ghost" size={"sm"}
+                    className="font-semibold text-primary/75 flex gap-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Rating
+                    {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
+                </Button>
+            )
+        },
+        cell: (cell) => {
+            const rating = cell.row.original.rating ? cell.row.original.rating : 0
+            const formattedRating = rating % 1 === 0 ? rating + ".0" : rating
+            return (
+                <span className="pl-6">{formattedRating}</span>
+            )
+        }
+    },
+    {
+        //  voor filtering op discount
+        accessorKey: "discount",
+        sortingFn: "basic",
+        header: ({ column }) => <></>,
+        cell: ({ }) => <></>
+    },
+    {
+        accessorKey: "price",
+        sortingFn: "basic",
+        header: ({ column }) => {
+            return (
+                <Button variant="ghost" size={"sm"}
+                    className="font-semibold text-primary/75 flex gap-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Price
+                    {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
+                </Button>
+            )
+        },
 
+        cell: ({ cell }) => {
+            const amount = parseFloat(cell.row.original.price.toString());
+            const formatted = new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+            }).format(amount);
+            return (
+                <span className="pl-3 relative">
+                    {cell.row.original.discount ? (
+                        <>
+                            <span className="absolute -top-4 right-1 line-through text-xs text-primary/50">{formatted}</span>
+                            <span>{new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "USD",
+                            }).format(amount - (amount * cell.row.original.discount / 100))}</span>
+                        </>
+                    ) : (
+                        formatted
+                    )}
+                </span>
+            );
+        },
+    },
+    {
+        accessorKey: "inventory",
+        sortingFn: "basic",
+        header: ({ column }) => {
+            return (
+                <Button variant="ghost" size={"sm"}
+                    className="font-semibold text-primary/75 flex gap-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Inventory
+                    {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
+                </Button>
+            )
+        },
+        cell: (cell) => (
+            <span className="pl-3">{cell.row.original.inventory}x</span>
+        )
+    },
+    {
+        accessorKey: "orders",
+        sortingFn: "basic",
+        header: ({ column }) => {
+            return (
+                <Button variant="ghost" size={"sm"}
+                    className="font-semibold text-primary/75 flex gap-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                    Orders
+                    {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4 " />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
+                </Button>
+            )
+        },
+        cell: (cell) => (
+            <span className="pl-3">{cell.row.original.orders}x</span>
+        )
+    },
+    {
         id: "actions",
         enableHiding: false,
         header: ({ column }) => {
@@ -131,31 +211,31 @@ export const columns: ColumnDef<ExtentedCategory>[] = [
             const [isDialogOpen, setIsDialogOpen] = React.useState(false)
             // eslint-disable-next-line react-hooks/rules-of-hooks
             const toast = useToaster()
-            function deleteCategory() {
-                if (category.status === 'ACTIVE') {
-                    toast({
-                        title: "Cannot delete a featured category",
-                        variant: "warning",
-                        icon: <TriangleAlert className="h-4 w-4" />,
-                        duration: 5000,
-                        size: "icon"
-                    })
-                    return
-                } else if (category.productCount > 0) {
-                    toast({
-                        title: "Cannot delete a category with linked products",
-                        variant: "warning",
-                        icon: <TriangleAlert className="text-warning h-4 w-4" />,
-                        duration: 5000,
-                        size: "icon"
-                    })
-                } else {
-                    setIsDialogOpen(true)
-                    if (row.getIsSelected()) {
-                        row.toggleSelected()
-                    }
-                }
-            }
+            // function deleteCategory() {
+            //     if (category.status === 'ACTIVE') {
+            //         toast({
+            //             title: "Cannot delete a featured category",
+            //             variant: "warning",
+            //             icon: <TriangleAlert className="h-4 w-4" />,
+            //             duration: 5000,
+            //             size: "icon"
+            //         })
+            //         return
+            //     } else if (category.productCount > 0) {
+            //         toast({
+            //             title: "Cannot delete a category with linked products",
+            //             variant: "warning",
+            //             icon: <TriangleAlert className="text-warning h-4 w-4" />,
+            //             duration: 5000,
+            //             size: "icon"
+            //         })
+            //     } else {
+            //         setIsDialogOpen(true)
+            //         if (row.getIsSelected()) {
+            //             row.toggleSelected()
+            //         }
+            //     }
+            // }
 
             function undoDeletion() {
                 undoDeleteCategories([category.id])
@@ -175,10 +255,10 @@ export const columns: ColumnDef<ExtentedCategory>[] = [
                         <span className="sr-only">Edit category</span>
                     </Link>
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <Button onClick={() => deleteCategory()} size="md" variant="ghost" aria-label="Delete category">
+                        {/* <Button onClick={() => deleteCategory()} size="md" variant="ghost" aria-label="Delete category">
                             <Trash className="h-4 w-4" />
                             <span className="sr-only">Delete category</span>
-                        </Button>
+                        </Button> */}
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Confirm Category Deletion.</DialogTitle>
