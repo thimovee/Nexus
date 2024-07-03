@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.cl-internal-b3fm6y {
+    display: none;
+}
+
+.cl-rootBox {
+    width: 100%;
+}
+
+.cl-card {
+    width: 100%;
+}

@@ -20,6 +20,7 @@ import { useToaster } from "@/hooks/useToaster"
 import React from "react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { deleteProducts, undoDeleteProducts } from "@/app/_actions/product"
 
 
 export const columns: ColumnDef<ExtendedProduct>[] = [
@@ -52,7 +53,7 @@ export const columns: ColumnDef<ExtendedProduct>[] = [
                     className="font-semibold text-primary/75 flex gap-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                 >
-                    Category
+                    Product
                     {column.getIsSorted() ? column.getIsSorted() === "desc" ? (<ChevronDown className="h-4 w-4" />) : <ChevronUp className="h-4 w-4 " /> : (<ChevronsUpDown className="h-4 w-4 " />)}
                 </Button>
             )
@@ -85,7 +86,7 @@ export const columns: ColumnDef<ExtendedProduct>[] = [
             )
         },
         cell: (cell) => (
-            <Badge className="!bg-cta/15" variant="outline" >
+            <Badge className="!bg-cta/15 !rounded-md" variant="outline" >
                 {cell.row.original.category}
             </Badge>
         )
@@ -206,7 +207,7 @@ export const columns: ColumnDef<ExtendedProduct>[] = [
             )
         },
         cell: ({ row }) => {
-            const category = row.original
+            const product = row.original
             // eslint-disable-next-line react-hooks/rules-of-hooks
             const [isDialogOpen, setIsDialogOpen] = React.useState(false)
             // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -237,8 +238,18 @@ export const columns: ColumnDef<ExtendedProduct>[] = [
             //     }
             // }
 
+            // function undoDeletion() {
+            //     undoDeleteCategories([category.id])
+            //     toast({
+            //         title: "Category deletion undone",
+            //         variant: "success",
+            //         duration: 3000,
+            //         icon: <Undo className="h-4 w-4" />,
+            //     })
+            // }
+
             function undoDeletion() {
-                undoDeleteCategories([category.id])
+                undoDeleteProducts([product.id])
                 toast({
                     title: "Category deletion undone",
                     variant: "success",
@@ -247,63 +258,41 @@ export const columns: ColumnDef<ExtendedProduct>[] = [
                 })
             }
 
-
             return (
                 <div className="flex items-center gap-2">
-                    <Link href={`/dashboard/categories/edit/${category.slug}`} className={cn(buttonVariants({ variant: "ghost", size: "md" }))} aria-label="Edit category">
+                    <Link href={`/dashboard/products/edit/${product.slug}`} className={cn(buttonVariants({ variant: "ghost", size: "md" }))} aria-label="Edit product">
                         <PencilIcon className="h-4 w-4" />
-                        <span className="sr-only">Edit category</span>
+                        <span className="sr-only">Edit product</span>
                     </Link>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        {/* <Button onClick={() => deleteCategory()} size="md" variant="ghost" aria-label="Delete category">
-                            <Trash className="h-4 w-4" />
-                            <span className="sr-only">Delete category</span>
-                        </Button> */}
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Confirm Category Deletion.</DialogTitle>
-                                <DialogDescription asChild className="py-8">
-                                    <div className="flex gap-2 items-center">
-                                        <TriangleAlert className="h-5 w-5 text-warning" />
-                                        <p>You are about to delete the category <span className="font-semibold">{category.name}</span>. Are you sure you want to proceed?</p>
-                                    </div>
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="w-full grid grid-cols-2 gap-3">
-                                <DialogClose asChild>
-                                    <Button size="md" variant="subtle">
-                                        Cancel
-                                    </Button>
-                                </DialogClose>
-                                <Button size="md" variant="destructive" onClick={() => {
-                                    deleteCategories([category.id]).then(() => {
-                                        toast({
-                                            title: "Category deleted",
-                                            description: "Category has been deleted successfully",
-                                            action: <div
-                                                onClick={() => undoDeletion()}
-                                                className="translate-x-4 border border-red-500 text-sm text-background font-semibold bg-red-500 rounded-md px-2 py-1">Undo</div>,
-                                            duration: 10000,
-                                            size: "icon"
-                                        })
-                                    }).catch((error) => {
-                                        toast({
-                                            title: "Error deleting category",
-                                            description: error.message,
-                                            variant: "warning",
-                                            icon: <TriangleAlert className="h-4 w-4" />,
-                                            duration: 5000,
-                                            size: "icon"
-                                        })
-                                    })
-                                    setIsDialogOpen(false)
-                                }
-                                }>
-                                    Delete
-                                </Button>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    <Link href={`/products/${product.slug}`} className={cn(buttonVariants({ variant: "ghost", size: "md" }))} aria-label="View product">
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only">View category</span>
+                    </Link>
+                    <Button onClick={async () => await deleteProducts([product.id]).then(() => {
+                        toast({
+                            title: "Category deleted",
+                            description: "Category has been deleted successfully",
+                            action: <div
+                                onClick={() => undoDeletion()}
+                                className="translate-x-4 border border-red-500 text-sm text-background font-semibold bg-red-500 rounded-md px-2 py-1">Undo</div>,
+                            duration: 10000,
+                            size: "icon"
+                        })
+                    }).catch((error) => {
+                        toast({
+                            title: "Error deleting category",
+                            description: error.message,
+                            variant: "warning",
+                            icon: <TriangleAlert className="h-4 w-4" />,
+                            duration: 5000,
+                            size: "icon"
+                        })
+                    })
+
+                    } variant="ghost" size={"md"} aria-label="Delete category">
+                        <Trash className="h-4 w-4" />
+                        <span className="sr-only">Delete category</span>
+                    </Button>
                 </div>
             )
         },

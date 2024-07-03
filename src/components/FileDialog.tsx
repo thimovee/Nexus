@@ -23,6 +23,7 @@ interface FileDialogProps<TFieldValues extends FieldValues>
     setFiles: React.Dispatch<React.SetStateAction<FileWithPreview[] | null>>
     isUploading?: boolean
     disabled?: boolean
+    appendImages?: boolean
 }
 
 export function FileDialog<TFieldValues extends FieldValues>({

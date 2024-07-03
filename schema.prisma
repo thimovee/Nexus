@@ -24,28 +24,27 @@ model Order {
 }
 
 model Product {
-  id              Int      @id @default(autoincrement())
-  name            String
-  price           Float
-  inventory       Int
-  description     String
-  colorId         Int?
-  images          Json[]
-  brandId         Int?
-  discount        Float?
-  isActive        Boolean? @default(true)
-  slug            String   @unique
-  nameMeta        String?
-  descriptionMeta String?
-  categoryId      Int
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  color           Color?   @relation(fields: [colorId], references: [id])
-  tags            Tag[]
-  brand           Brand?   @relation(fields: [brandId], references: [id])
-  reviews         Review[]
-  category        Category @relation(fields: [categoryId], references: [id])
-  orders          Order[]
+  id               Int             @id @default(autoincrement())
+  name             String
+  price            Float
+  inventory        Int
+  description      String
+  colorId          Int?
+  images           Json[]
+  brandId          Int?
+  discount         Float?
+  slug             String          @unique
+  nameMeta         String?
+  descriptionMeta  String?
+  categoryId       Int
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  isDeleted        Boolean?        @default(false)
+  reviews          Review[]
+  category         Category        @relation(fields: [categoryId], references: [id])
+  orders           Order[]
+  AttributeValue   AttributeValue? @relation(fields: [attributeValueId], references: [id])
+  attributeValueId Int?
 
   @@index([categoryId])
   @@index([brandId])
@@ -77,30 +76,23 @@ model Category {
   products  Product[]
 }
 
-model Brand {
-  id        Int       @id @default(autoincrement())
-  name      String
-  icon      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+model Attribute {
+  id              Int              @id @default(autoincrement())
+  name            String
+  description     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  attributeValues AttributeValue[]
 }
 
-model Color {
-  id        Int       @id @default(autoincrement())
-  name      String
-  hex       String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
-}
-
-model Tag {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  products  Product[]
+model AttributeValue {
+  id          Int       @id @default(autoincrement())
+  value       String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  Attribute   Attribute @relation(fields: [attributeId], references: [id])
+  attributeId Int
 }
 
 model OrderToProduct {
@@ -112,15 +104,6 @@ model OrderToProduct {
   @@map("_OrderToProduct")
 }
 
-model ProductToTag {
-  A Int
-  B Int
-
-  @@unique([A, B], map: "_ProductToTag_AB_unique")
-  @@index([B], map: "_ProductToTag_B_index")
-  @@map("_ProductToTag")
-}
-
 enum FeaturedStatus {
   NOT_FEATURED
   ACTIVE
@@ -129,9 +112,7 @@ enum FeaturedStatus {
 
 enum OrderStatus {
   PENDING
-  PROCESSING
-  COMPLETED
-  CANCELLED
   REFUNDED
-  FAILED
+  SHIPPED
+  DELIVERED
 }

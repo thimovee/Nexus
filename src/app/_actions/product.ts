@@ -11,8 +11,6 @@ export async function getExtentedProducts(
     const products = await db.product.findMany({
         include: {
             category: true,
-            brand: true,
-            color: true,
             reviews: true,
             orders: {
                 select: {
@@ -20,13 +18,13 @@ export async function getExtentedProducts(
                 },
             },
         },
+        where: {
+            isDeleted: false,
+        }
     });
 
     const extentedProducts = products.map((product) => {
         const categoryName = product.category?.name;
-        const brandName = product.brand?.name;
-        const colorName = product.color?.name;
-        const colorHex = product.color?.hex;
         const reviews = product.reviews || [];
         const averageRating = reviews.reduce(
             (total, { rating }) => total + rating,
@@ -38,9 +36,6 @@ export async function getExtentedProducts(
             ...product,
             category: categoryName,
             rating: averageRating,
-            brand: brandName,
-            color: colorName,
-            colorHex: colorHex,
             orders: orderCount,
         };
     });
@@ -66,12 +61,86 @@ export async function addProduct(input: z.infer<typeof productSchema>) {
         ...otherData,
         slug,
         images: images,
-        price: parseFloat(input.price),
+        price: parseFloat(input.price.toString()),
         description: input.description || '',
     };
 
     await db.product.create({
         data: productData
     });
+    revalidatePath("/dashboard/products");
+}
+
+export async function deleteProducts(ids: number[]) {
+    await db.product.updateMany({
+        where: {
+            id: {
+                in: ids
+            }
+        },
+        data: {
+            isDeleted: true
+        }
+    });
+    revalidatePath("/dashboard/products");
+}
+
+export async function undoDeleteProducts(ids: number[]) {
+    await db.product.updateMany({
+        where: {
+            id: {
+                in: ids
+            }
+        },
+        data: {
+            isDeleted: false
+        }
+    });
+    revalidatePath("/dashboard/products");
+}
+
+export async function updateProduct(input: z.infer<typeof productSchema> & {
+    id: number
+}) {
+    if (typeof input.id !== "number") {
+        throw new Error("Invalid input, provide a number.")
+    }
+
+    const product = await db.product.findFirst({
+        where: {
+            id: input.id
+        }
+    })
+
+    if (!product) {
+        throw new Error("Product not found.")
+    }
+    const price = parseFloat(input.price.toString());
+    if (isNaN(price)) {
+        throw new Error("Invalid price value");
+    }
+    const newSlug = slugify(input.name, { lower: true, replacement: '-' });
+    const images = input.images as ImageFile[];
+    let updateData: Record<string, unknown> = {
+        ...input,
+        price,
+        slug: newSlug
+    };
+
+    if (images && images.length > 0) {
+        updateData.images = {
+            set: images,
+        };
+    } else {
+        delete updateData.images;
+    }
+
+
+    await db.product.update({
+        where: {
+            id: input.id
+        },
+        data: updateData
+    })
     revalidatePath("/dashboard/products");
 }

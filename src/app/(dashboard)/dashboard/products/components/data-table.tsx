@@ -3,7 +3,7 @@ import { ColumnDef, ColumnFiltersState, getFilteredRowModel, VisibilityState, fl
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button, buttonVariants } from "@/components/ui/button"
 import React, { Suspense } from "react"
-import { Archive, Eye, Filter, LucideAlertTriangle, Merge, Plus, Search, SlidersHorizontal, Star, StarOff, Trash, Trash2, TriangleAlert, Undo, Undo2, X } from "lucide-react"
+import { AlertOctagon, Archive, Eye, Filter, LucideAlertTriangle, Merge, Plus, Search, SlidersHorizontal, Star, StarOff, Trash, Trash2, TriangleAlert, Undo, Undo2, X } from "lucide-react"
 import { Category, FeaturedStatus } from "@prisma/client";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -119,23 +119,15 @@ export function DataTable<TData extends ExtendedProduct, TValue>({ columns, data
                             </Badge>
                             <DialogContent>
                                 <DialogHeader>
-                                    <DialogTitle>Confirm Category Deletion.</DialogTitle>
+                                    <DialogTitle>Are you sure?</DialogTitle>
                                     <DialogDescription asChild>
                                         <div className="flex flex-col gap-10">
-                                            <p>You are about to delete the following categor{table.getFilteredSelectedRowModel().rows.length > 1 ? "ies" : "y"} </p>
-                                            <div className="bg-gray-50 border border-border p-3 rounded-md flex flex-col gap-3">
+                                            <p className="text-primary/50">You are about to delete the following product{table.getFilteredSelectedRowModel().rows.length > 1 && "s"}</p>
+                                            <div className="p-3 flex flex-col gap-3">
                                                 {table.getFilteredSelectedRowModel().rows.map((row) => (
-                                                    <div key={row.original.id} className="border-b pb-3 border-border last:border-none relative h-16 w-full flex gap-6 items-center">
-                                                        {/* {row.original.thumbnail && row.original.thumbnail[0] && (
-                                                            <div className="relative h-full w-1/4">
-                                                                @ts-ignore
-                                                                <Image src={row.original.thumbnail[0].url} alt={row.original.name} fill className="shadow h-full w-full object-cover rounded-md" />
-                                                            </div>
-                                                        )}
-                                                        <p className="mt-auto font-semibold text-lg">{row.original.name}</p>
-                                                        <Badge className="ml-auto mb-auto !text-xs !rounded-md" variant={row.original.status === 'ACTIVE' ? 'success' : row.original.status === 'NOT_FEATURED' ? 'destructive' : 'archived'}>
-                                                            {row.original.status === 'ACTIVE' ? 'Featured' : row.original.status === 'NOT_FEATURED' ? 'Not Featured' : 'Archived'}
-                                                        </Badge> */}
+                                                    <div key={row.original.id} className="flex gap-2 items-center">
+                                                        <AlertOctagon className="w-4 h-4 text-red-500" />
+                                                        <span className="font-semibold">{row.original.name}</span>
                                                     </div>
                                                 ))}
                                             </div>
@@ -272,7 +264,7 @@ export function DataTable<TData extends ExtendedProduct, TValue>({ columns, data
                     ) : (
                         <TableRow>
                             <TableCell colSpan={columns.length} className="h-[72.5px] text-center">
-                                No categories found.
+                                No products found.
                             </TableCell>
                         </TableRow>
                     )}

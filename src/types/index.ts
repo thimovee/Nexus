@@ -1,7 +1,7 @@
 import { userPrivateMetadataSchema } from "@/lib/validations/auth";
 import { z } from "zod";
 import { type FileWithPath } from "react-dropzone"
-import { Category, Product, Tag } from "@prisma/client";
+import { Attribute, AttributeValue, Category, Order, Product } from "@prisma/client";
 export type UserRole = z.infer<typeof userPrivateMetadataSchema.shape.role>
 
 export type FileWithPreview = FileWithPath & {
@@ -26,5 +26,29 @@ export type ExtendedProduct = Product & {
     colorHex: string;
     orders: number;
 }
+
+export type ExtendedAttributeGroup = Attribute & {
+    attributeValues: AttributeValue[];
+    attributeCount: number;
+};
+
+export type Customer = {
+    id: string;
+    imageUrl: string;
+    firstName: string;
+    lastName: string;
+    emailAddresses: {
+        emailAddress: string;
+    }[];
+    createdAt: number;
+    lastSignInAt: number;
+    role: string;
+    privateMetadata: {
+        role: UserRole;
+    };
+};
+
+
+
 
 

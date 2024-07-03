@@ -37,6 +37,7 @@ model Product {
     discount        Float?
     reviews         Review[]
     isActive        Boolean? @default(true)
+    isDeleted       Boolean? @default(false)
     slug            String   @unique
     nameMeta        String?
     descriptionMeta String?
